@@ -150,7 +150,13 @@ public class FCFSKernel implements Kernel
         try
         {
             return ProcessControlBlockImpl.loadProgram(filename);
-        } 
+        }
+        catch(Exception ex)
+        {
+            return null;
+        }
+        
+        /*
         catch (FileNotFoundException fileExp)
         {
             return null;
@@ -159,5 +165,6 @@ public class FCFSKernel implements Kernel
         {
             return null;
         }
+*/
     }
 }

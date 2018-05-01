@@ -8,6 +8,9 @@ package simulator;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,40 +20,62 @@ import java.util.logging.Logger;
  */
 public class ProcessControlBlockImpl implements ProcessControlBlock
 {
-    private int pID;
-    private String pName;
-    private int priority;
-    private Instruction instruction;
-    private State state;
+    private static int pID = 0;
+    private static String pName;
+    private static int priority = 0;
+    private static Deque<Instruction> CPUInstructionQueue = new ArrayDeque<>();
+    private static State state;
     
-    public ProcessControlBlockImpl(int id, String name, int pr, Instruction i, State s)
+    
+    public ProcessControlBlockImpl(String name, Deque<Instruction> IQueue)
     {
-        pID = id;
-        pName = name;
-        priority = pr;
-        instruction = i;
-        state = s;
+      pID = 0;
+      pName = name;
+      priority = 0;
+      
+      state = state.READY;
     }
     
     public static ProcessControlBlock loadProgram(String filename)
     {
+        String name = "";
+        Deque<Instruction> IQueue = new ArrayDeque<>();
+        
         try
         {
-            BufferedReader f = new BufferedReader(new FileReader("testone.txt"));
+            
+            BufferedReader f = new BufferedReader(new FileReader(filename));
             String s = f.readLine();
+            ArrayList<String> file = new ArrayList<>();
             while(s != null)
             {
-                
+              file.add(s);  
+              s = f.readLine();
             }
             
+            //PCB.pID++; 
+            name = file.get(0).substring(file.get(0).indexOf(":")+2,file.get(0).length());
+            
+            //fetching instructions for queue
+            for (int i = 2; i < file.size(); i++)
+            {
+                if(file.get(i).contains("CPU"))
+                {
+                    String [] ln = file.get(i).split(" ");
+                    Instruction cpuIn = new CPUInstruction(Integer.parseInt(ln[1]));
+                    IQueue.add(cpuIn);
+                }
+            }
+    
         } 
         catch (Exception ex)
         {
             System.out.println(ex);
         }
         
-        ProcessControlBlockImpl pcbi = new ProcessControlBlockImpl(pID, pName, pID, instruction, state);
-        return pcbi; 
+        ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(name, IQueue);
+        return PCB;
+
     }
     
     public int getPID()
@@ -77,17 +102,24 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     
     public Instruction getInstruction()
     {
-        return instruction;
+        return CPUInstructionQueue.peek();
     }
     
     public boolean hasNextInstruction()
     {
-        
+        if(CPUInstructionQueue.peek() != null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     
     public void nextInstruction()
     {
-        
+        CPUInstructionQueue.pop();
     }
     
     public State getState()
