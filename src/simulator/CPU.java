@@ -50,6 +50,7 @@ public class CPU  {
                 getCurrentProcess().nextInstruction();
                 assert(getCurrentProcess().getInstruction() instanceof IOInstruction);
                 IOInstruction ioInst = (IOInstruction)getCurrentProcess().getInstruction();
+                //System.out.println(ioInst == null);
                 TRACE.SYSCALL(SystemCall.IO_REQUEST, Config.getDevice(ioInst.getDeviceID()).toString(), ioInst.getDuration(), getCurrentProcess());
                 Config.getSimulationClock().logSystemCall();
                 Config.getKernel().syscall(SystemCall.IO_REQUEST, ioInst.getDeviceID(), new Integer(ioInst.getDuration()));

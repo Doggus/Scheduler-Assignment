@@ -12,8 +12,6 @@ public interface ProcessControlBlock {
      */
     enum State { WAITING, READY, RUNNING, TERMINATED };
 
-    
-    ProcessControlBlock ProcessControlBlock();
     /**
      * Obtain process ID.
      */

@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,23 +24,22 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     private static int pID = 0;
     private static String pName;
     private static int priority = 0;
-    private static Deque<Instruction> CPUInstructionQueue = new ArrayDeque<>();
+    private static List<Instruction> InstructionQueue;
+    private static int LineCounter = 0;
     private static State state;
     
     
-    public ProcessControlBlockImpl(String name, Deque<Instruction> IQueue)
+    public ProcessControlBlockImpl(String name, List<Instruction> Ins)
     {
-      pID = 0;
       pName = name;
-      priority = 0;
-      
-      state = state.READY;
+      InstructionQueue = Ins;
+      //state = state.READY; //????
     }
     
     public static ProcessControlBlock loadProgram(String filename)
     {
         String name = "";
-        Deque<Instruction> IQueue = new ArrayDeque<>();
+        List<Instruction> Ins = new ArrayList<>();
         
         try
         {
@@ -56,14 +56,21 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
             //PCB.pID++; 
             name = file.get(0).substring(file.get(0).indexOf(":")+2,file.get(0).length());
             
-            //fetching instructions for queue
-            for (int i = 2; i < file.size(); i++)
+            //fetching instructions for queue (start at 4th line in file)
+            for (int i = 3; i < file.size(); i++)
             {
+                //System.out.println(file.get(i));
                 if(file.get(i).contains("CPU"))
                 {
-                    String [] ln = file.get(i).split(" ");
-                    Instruction cpuIn = new CPUInstruction(Integer.parseInt(ln[1]));
-                    IQueue.add(cpuIn);
+                    String [] Cln = file.get(i).split(" ");
+                    Instruction cpuIn = new CPUInstruction(Integer.parseInt(Cln[1]));
+                    Ins.add(cpuIn);
+                }
+                else
+                {
+                    String [] Iln = file.get(i).split(" ");
+                    Instruction IOIn = new IOInstruction(Integer.parseInt(Iln[1]), Integer.parseInt(Iln[2]));
+                    Ins.add(IOIn);
                 }
             }
     
@@ -73,9 +80,11 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
             System.out.println(ex);
         }
         
-        ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(name, IQueue);
+        
+        ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(name, Ins);
+        pID++;
+   
         return PCB;
-
     }
     
     public int getPID()
@@ -102,24 +111,25 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     
     public Instruction getInstruction()
     {
-        return CPUInstructionQueue.peek();
+        //System.out.println(InstructionQueue.peek() == null);
+        return InstructionQueue.get(LineCounter);
     }
     
     public boolean hasNextInstruction()
     {
-        if(CPUInstructionQueue.peek() != null)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+       if(LineCounter < InstructionQueue.size()-1)
+       {
+           return true;
+       }
+       else
+       {
+           return false;
+       }
     }
     
     public void nextInstruction()
     {
-        CPUInstructionQueue.pop();
+       LineCounter++;
     }
     
     public State getState()

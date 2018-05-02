@@ -1,0 +1,10 @@
+# I/O Devices attached to the system.
+# DEVICE <device id> <type>
+DEVICE 1 DISK
+DEVICE 2 CDROM
+# Programs
+# PROGRAM <arrival time> <priority> <program file name>
+# PROGRAM 8 0 firefox.dat
+# PROGRAM 5 0 primescalculator.dat
+# PROGRAM 11 0 spice.dat
+PROGRAM 1 0 testone.prg

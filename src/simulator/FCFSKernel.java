@@ -41,14 +41,27 @@ public class FCFSKernel implements Kernel
         
         ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
         
-        if(readyQueue.peek() == null)
+        if(readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
         {
            Config.getCPU().contextSwitch(null);
-           return null;
+           pcb.setState(ProcessControlBlock.State.WAITING);
+           if(pcb.hasNextInstruction())
+           {
+               readyQueue.add(pcb);
+           }
+           
+           return pcb;
         }
         else
         {
             Config.getCPU().contextSwitch(readyQueue.pop());
+            
+            if(pcb != null && pcb.hasNextInstruction())
+            {
+                readyQueue.add(pcb);
+                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.READY); 
+            }
+            
             return pcb;
         }
         
@@ -98,11 +111,10 @@ public class FCFSKernel implements Kernel
                 // that the IODevice can call interrupt() when the request is completed.
                 // Set the PCB state of the requesting process to WAITING.
                 // Call dispatch().
-                
                 IODevice dev = Config.getDevice((Integer)varargs[0]);
                 dev.requestIO((Integer)varargs[1], Config.getCPU().getCurrentProcess(), this);
                 Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.WAITING);
-                dispatch();
+                dispatch(); 
             }
             break;
             case TERMINATE_PROCESS:
@@ -132,13 +144,15 @@ public class FCFSKernel implements Kernel
                 // Retrieve the PCB of the process (varargs[1]), set its state
                 // to READY, put it on the end of the ready queue.
                 // If CPU is idle then dispatch().
-                ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
-                pcb.setState(ProcessControlBlock.State.READY);
-                readyQueue.add(pcb);
+                
+                //ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
+                //pcb.setState(ProcessControlBlock.State.READY);
+                //readyQueue.add(pcb);
                 if (Config.getCPU().isIdle())
                 {
                     dispatch();
                 }
+                
                 break;
             default:
                 throw new IllegalArgumentException("FCFSKernel:interrupt(" + interruptType + "...): unknown type.");
