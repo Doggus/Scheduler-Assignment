@@ -21,19 +21,23 @@ import java.util.logging.Logger;
  */
 public class ProcessControlBlockImpl implements ProcessControlBlock
 {
-    private static int pID = 0;
-    private static String pName;
-    private static int priority = 0;
-    private static List<Instruction> InstructionQueue;
-    private static int LineCounter = 0;
-    private static State state;
+    private static int pID;
+    private static int count = 0;
+    private String pName;
+    private int priority;
+    private List<Instruction> InstructionQueue;
+    private int LineCounter;
+    private State state;
     
     
-    public ProcessControlBlockImpl(String name, List<Instruction> Ins)
+    public ProcessControlBlockImpl(int id, String name, List<Instruction> Ins)
     {
+      pID = id;
       pName = name;
+      priority = 0;
       InstructionQueue = Ins;
-      //state = state.READY; //????
+      LineCounter = 0;
+      state = state.READY;
     }
     
     public static ProcessControlBlock loadProgram(String filename)
@@ -52,14 +56,12 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
               file.add(s);  
               s = f.readLine();
             }
-            
-            //PCB.pID++; 
-            name = file.get(0).substring(file.get(0).indexOf(":")+2,file.get(0).length());
+             
+            name = filename;
             
             //fetching instructions for queue (start at 4th line in file)
             for (int i = 3; i < file.size(); i++)
             {
-                //System.out.println(file.get(i));
                 if(file.get(i).contains("CPU"))
                 {
                     String [] Cln = file.get(i).split(" ");
@@ -81,8 +83,8 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
         }
         
         
-        ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(name, Ins);
-        pID++;
+        ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(count, name, Ins);
+        count++;
    
         return PCB;
     }
@@ -111,7 +113,6 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     
     public Instruction getInstruction()
     {
-        //System.out.println(InstructionQueue.peek() == null);
         return InstructionQueue.get(LineCounter);
     }
     

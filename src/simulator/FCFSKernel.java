@@ -1,6 +1,5 @@
 package simulator;
 
-
 import simulator.Config;
 import simulator.IODevice;
 import simulator.Kernel;
@@ -38,33 +37,30 @@ public class FCFSKernel implements Kernel
         // If ready queue empty then CPU goes idle ( holds a null value).
         // Returns process removed from CPU.
         
-        
-        ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
-        
-        if(readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
+        if (readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
         {
-           Config.getCPU().contextSwitch(null);
-           pcb.setState(ProcessControlBlock.State.WAITING);
-           if(pcb.hasNextInstruction())
-           {
-               readyQueue.add(pcb);
-           }
-           
-           return pcb;
-        }
-        else
-        {
-            Config.getCPU().contextSwitch(readyQueue.pop());
-            
-            if(pcb != null && pcb.hasNextInstruction())
+            ProcessControlBlock pcb = Config.getCPU().contextSwitch(null);
+            if (pcb != null && pcb.hasNextInstruction())
             {
                 readyQueue.add(pcb);
-                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.READY); 
             }
+
+            return pcb;
+        } 
+        else
+        {
+            //ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
+            ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
             
+            if (pcb != null && pcb.hasNextInstruction())
+            {
+                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.READY);
+                readyQueue.add(pcb);
+            }
+
             return pcb;
         }
-        
+
     }
 
     public int syscall(int number, Object... varargs)
@@ -86,16 +82,15 @@ public class FCFSKernel implements Kernel
                     // Loaded successfully.
                     // Now add to end of ready queue.
                     // If CPU idle then call dispatch.
-                    
-                  readyQueue.add(pcb);
-                  
-                  if(Config.getCPU().isIdle())
-                  {
-                      dispatch();
-                  }
-                  
-                } 
-                else
+
+                    readyQueue.add(pcb);
+
+                    if (Config.getCPU().isIdle())
+                    {
+                        dispatch();
+                    }
+
+                } else
                 {
                     result = -1;
                 }
@@ -111,10 +106,10 @@ public class FCFSKernel implements Kernel
                 // that the IODevice can call interrupt() when the request is completed.
                 // Set the PCB state of the requesting process to WAITING.
                 // Call dispatch().
-                IODevice dev = Config.getDevice((Integer)varargs[0]);
-                dev.requestIO((Integer)varargs[1], Config.getCPU().getCurrentProcess(), this);
+                IODevice dev = Config.getDevice((Integer) varargs[0]);
+                dev.requestIO((Integer) varargs[1], Config.getCPU().getCurrentProcess(), this);
                 Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.WAITING);
-                dispatch(); 
+                dispatch();
             }
             break;
             case TERMINATE_PROCESS:
@@ -144,7 +139,7 @@ public class FCFSKernel implements Kernel
                 // Retrieve the PCB of the process (varargs[1]), set its state
                 // to READY, put it on the end of the ready queue.
                 // If CPU is idle then dispatch().
-                
+
                 //ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
                 //pcb.setState(ProcessControlBlock.State.READY);
                 //readyQueue.add(pcb);
@@ -152,7 +147,7 @@ public class FCFSKernel implements Kernel
                 {
                     dispatch();
                 }
-                
+
                 break;
             default:
                 throw new IllegalArgumentException("FCFSKernel:interrupt(" + interruptType + "...): unknown type.");
@@ -164,12 +159,11 @@ public class FCFSKernel implements Kernel
         try
         {
             return ProcessControlBlockImpl.loadProgram(filename);
-        }
-        catch(Exception ex)
+        } catch (Exception ex)
         {
             return null;
         }
-        
+
         /*
         catch (FileNotFoundException fileExp)
         {
@@ -179,6 +173,6 @@ public class FCFSKernel implements Kernel
         {
             return null;
         }
-*/
+         */
     }
 }

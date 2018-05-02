@@ -1,4 +1,5 @@
 
+import java.util.Scanner;
 import simulator.Config;
 import simulator.FCFSKernel;
 import simulator.Kernel;
@@ -10,12 +11,20 @@ public class SimulateFCFS
    
  public static void main(String[] args)
     {
-        //int level = 0;
-        int dispatchCost = 1;
-        int syscallCost = 0;
-        String configFileName = "ConfigFile.test";
+        Scanner scn = new Scanner(System.in);
         
-        //TRACE.SET_TRACE_LEVEL(level);
+        System.out.println("*** FCFS Simulator ***");
+        System.out.print("Enter configuration file name: ");
+        String configFileName = scn.nextLine();
+        System.out.print("Enter cost of system call: ");
+        int syscallCost = scn.nextInt();
+        System.out.print("Enter cost of context switch: ");
+        int dispatchCost = scn.nextInt();
+        System.out.print("Enter trace level: ");
+        int level = scn.nextInt();
+        System.out.println("");
+        
+        TRACE.SET_TRACE_LEVEL(level);
         final Kernel kernel = new FCFSKernel();
         Config.init(kernel, dispatchCost, syscallCost);
         Config.buildConfiguration(configFileName);
