@@ -1,0 +1,14 @@
+# Program name: spice.dat
+# CPU Generator (lambda=8.0, lower_bound=1000, upper_bound=5000)
+# IO (lambda=5.0, lower_bound=2000, upper_bound=10000, devices=[1, 2, 3])
+CPU 2308
+IO 2782 1
+CPU 1209
+IO 2193 2
+CPU 1298
+IO 4234 1
+CPU 1224
+IO 3610 1
+CPU 1215
+IO 4549 2
+CPU 1349

@@ -39,17 +39,21 @@ public class FCFSKernel implements Kernel
         
         if (readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
         {
+           
+            //System.out.println(readyQueue.peek().toString());
+            
             ProcessControlBlock pcb = Config.getCPU().contextSwitch(null);
             if (pcb != null && pcb.hasNextInstruction())
             {
                 readyQueue.add(pcb);
             }
-
+            
+            
             return pcb;
         } 
         else
         {
-            //ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
+            
             ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
             
             if (pcb != null && pcb.hasNextInstruction())
@@ -159,7 +163,8 @@ public class FCFSKernel implements Kernel
         try
         {
             return ProcessControlBlockImpl.loadProgram(filename);
-        } catch (Exception ex)
+        } 
+        catch (Exception ex)
         {
             return null;
         }

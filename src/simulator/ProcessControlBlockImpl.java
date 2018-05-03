@@ -25,7 +25,7 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     private static int count = 0;
     private String pName;
     private int priority;
-    private List<Instruction> InstructionQueue;
+    private List<Instruction> Instructions;
     private int LineCounter;
     private State state;
     
@@ -34,9 +34,9 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     {
       pID = id;
       pName = name;
-      priority = 0;
-      InstructionQueue = Ins;
       LineCounter = 0;
+      priority = 0;
+      Instructions = Ins;
       state = state.READY;
     }
     
@@ -60,8 +60,8 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
             name = filename;
             
             //fetching instructions for queue (start at 4th line in file)
-            for (int i = 3; i < file.size(); i++)
-            {
+            for (int i = 3; i < file.size(); i++) // CANT START FROM 3RD LINE BECAUSE CERTAIN PROGRAM FILES HAVE LESS THAN 3 LINES, LOOK AT TEST FILES FOR EXAMPLES
+            {                                       //NEED TO JUST IGNORE LINES STARTING WITH #
                 if(file.get(i).contains("CPU"))
                 {
                     String [] Cln = file.get(i).split(" ");
@@ -75,7 +75,7 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
                     Ins.add(IOIn);
                 }
             }
-    
+            System.out.println(Ins.size());
         } 
         catch (Exception ex)
         {
@@ -85,6 +85,7 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
         
         ProcessControlBlockImpl PCB = new ProcessControlBlockImpl(count, name, Ins);
         count++;
+        
    
         return PCB;
     }
@@ -113,12 +114,13 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     
     public Instruction getInstruction()
     {
-        return InstructionQueue.get(LineCounter);
+        //System.out.println(LineCounter);
+        return Instructions.get(LineCounter);
     }
     
     public boolean hasNextInstruction()
     {
-       if(LineCounter < InstructionQueue.size()-1)
+       if(LineCounter < Instructions.size()-1)
        {
            return true;
        }
@@ -130,7 +132,8 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
     
     public void nextInstruction()
     {
-       LineCounter++;
+        //System.out.println(LineCounter);
+        LineCounter++;
     }
     
     public State getState()
