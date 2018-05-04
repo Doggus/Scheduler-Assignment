@@ -21,8 +21,8 @@ import java.util.logging.Logger;
  */
 public class ProcessControlBlockImpl implements ProcessControlBlock
 {
-    private static int pID;
-    private static int count = 0;
+    private int pID;
+    private static int count = 1;
     private String pName;
     private int priority;
     private List<Instruction> Instructions;
@@ -59,23 +59,27 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
              
             name = filename;
             
-            //fetching instructions for queue (start at 4th line in file)
-            for (int i = 3; i < file.size(); i++) // CANT START FROM 3RD LINE BECAUSE CERTAIN PROGRAM FILES HAVE LESS THAN 3 LINES, LOOK AT TEST FILES FOR EXAMPLES
-            {                                       //NEED TO JUST IGNORE LINES STARTING WITH #
-                if(file.get(i).contains("CPU"))
+            //fetching instructions for queue
+            for (int i = 0; i < file.size(); i++)               // CANT START FROM 3RD LINE BECAUSE CERTAIN PROGRAM FILES HAVE LESS THAN 3 LINES, LOOK AT TEST FILES FOR EXAMPLES
+            {                                                   //NEED TO JUST IGNORE LINES STARTING WITH #
+                if(!(file.get(i).contains("#"))) //ignore comments
                 {
-                    String [] Cln = file.get(i).split(" ");
-                    Instruction cpuIn = new CPUInstruction(Integer.parseInt(Cln[1]));
-                    Ins.add(cpuIn);
+                    if(file.get(i).contains("CPU"))
+                    {
+                        String [] Cln = file.get(i).split(" ");
+                        Instruction cpuIn = new CPUInstruction(Integer.parseInt(Cln[1]));
+                        Ins.add(cpuIn);
+                    }
+                    else
+                    {
+                        String [] Iln = file.get(i).split(" ");
+                        Instruction IOIn = new IOInstruction(Integer.parseInt(Iln[1]), Integer.parseInt(Iln[2]));
+                        Ins.add(IOIn);
+                    }
                 }
-                else
-                {
-                    String [] Iln = file.get(i).split(" ");
-                    Instruction IOIn = new IOInstruction(Integer.parseInt(Iln[1]), Integer.parseInt(Iln[2]));
-                    Ins.add(IOIn);
-                }
+                
             }
-            System.out.println(Ins.size());
+          
         } 
         catch (Exception ex)
         {
@@ -148,7 +152,9 @@ public class ProcessControlBlockImpl implements ProcessControlBlock
    
     public String toString()
     {
-        String s = "{pid(" + getPID() + "), state(" + getState() + "), name(" + getProgramName() + ")}";
+        
+        //process(pid=1, state=RUNNING, name="pOne.prg"))
+        String s = "process(pid=" + getPID() + ", state=" + getState() + ", name=" + "\"" + getProgramName() + "\"" + ")";
         return s;
     }
 }

@@ -40,7 +40,6 @@ public class FCFSKernel implements Kernel
         if (readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
         {
            
-            //System.out.println(readyQueue.peek().toString());
             
             ProcessControlBlock pcb = Config.getCPU().contextSwitch(null);
             if (pcb != null && pcb.hasNextInstruction())
@@ -54,11 +53,12 @@ public class FCFSKernel implements Kernel
         else
         {
             
+            
             ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
+            Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.RUNNING);
             
             if (pcb != null && pcb.hasNextInstruction())
             {
-                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.READY);
                 readyQueue.add(pcb);
             }
 
@@ -144,9 +144,8 @@ public class FCFSKernel implements Kernel
                 // to READY, put it on the end of the ready queue.
                 // If CPU is idle then dispatch().
 
-                //ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
-                //pcb.setState(ProcessControlBlock.State.READY);
-                //readyQueue.add(pcb);
+                ProcessControlBlock pcb = (ProcessControlBlock)varargs[1];
+                pcb.setState(ProcessControlBlock.State.READY);
                 if (Config.getCPU().isIdle())
                 {
                     dispatch();

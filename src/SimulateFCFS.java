@@ -22,7 +22,6 @@ public class SimulateFCFS
         int dispatchCost = scn.nextInt();
         System.out.print("Enter trace level: ");
         int level = scn.nextInt();
-        System.out.println("");
         
         TRACE.SET_TRACE_LEVEL(level);
         final Kernel kernel = new FCFSKernel();
@@ -31,7 +30,7 @@ public class SimulateFCFS
         Config.run();
         SystemTimer timer = Config.getSystemTimer();
         System.out.println(timer);
-        System.out.println("Context switches:" + Config.getCPU().getContextSwitches());
+        System.out.println("Context switches: " + Config.getCPU().getContextSwitches());
         System.out.printf("CPU utilization: %.2f\n",((double)timer.getUserTime())/timer.getSystemTime() * 100);
    }
    
