@@ -29,31 +29,40 @@ public class RRKernel implements Kernel
     private ProcessControlBlock dispatch()
     {
        
-        //CPUInstruction ci = new CPUInstruction(20);
-        
-        if (readyQueue.peek() == null || readyQueue.peek().getInstruction() instanceof IOInstruction)
+        if(readyQueue.peek() != null && readyQueue.size() != 1 && !(readyQueue.peek().getInstruction() instanceof IOInstruction))
         {
-           
-           readyQueue.add(Config.getCPU().getCurrentProcess());
-           ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.peek());
-            
-           return pcb;
-        } 
+            if (readyQueue.peek().getInstruction() instanceof IOInstruction)
+            {
+                readyQueue.add(readyQueue.pop());
+                ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
+
+               return pcb;
+            } 
+            else
+            {
+
+                ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
+                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.RUNNING);
+
+                if (pcb != null && pcb.hasNextInstruction())
+                {
+                    readyQueue.add(pcb);
+                }
+
+                if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime || Config.getCPU().getCurrentProcess().hasNextInstruction())
+                {
+                    Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
+                }
+
+                return pcb;
+            }
+        }
         else
         {
-            
-            
-            ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
-            Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.RUNNING);
-            
-            if (pcb != null && pcb.hasNextInstruction())
-            {
-                readyQueue.add(pcb);
-            }
-
-            return pcb;
+            Config.getCPU().contextSwitch(null);
         }
-
+        
+        return null;
     }
 
     public int syscall(int number, Object... varargs)
@@ -112,10 +121,15 @@ public class RRKernel implements Kernel
         {
             case TIME_OUT:
                 dispatch();
+                
             case WAKE_UP:
 
-                ProcessControlBlock pcb = (ProcessControlBlock)varargs[1];
-                pcb.setState(ProcessControlBlock.State.READY);
+                if(varargs.length == 2)
+                {
+                    ProcessControlBlock pcb = (ProcessControlBlock)varargs[1];
+                    pcb.setState(ProcessControlBlock.State.READY);
+                }
+                
                 if (Config.getCPU().isIdle())
                 {
                     dispatch();
