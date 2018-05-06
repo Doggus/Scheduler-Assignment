@@ -28,7 +28,7 @@ public class RRKernel implements Kernel
 
     private ProcessControlBlock dispatch()
     {
-       
+       /*
         if(readyQueue.peek() != null && readyQueue.size() != 1 && !(readyQueue.peek().getInstruction() instanceof IOInstruction))
         {
             if (readyQueue.peek().getInstruction() instanceof IOInstruction)
@@ -61,8 +61,43 @@ public class RRKernel implements Kernel
         {
             Config.getCPU().contextSwitch(null);
         }
+        */
         
-        return null;
+        if(!(Config.getCPU().isIdle()))
+        {
+           
+            ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
+            
+            if(pcb.hasNextInstruction() || ((CPUInstruction)pcb.getInstruction()).getBurstRemaining() > 0)
+            {
+                readyQueue.add(pcb);
+            }
+            
+            if(readyQueue.peek() instanceof IOInstruction && readyQueue.size() == 1)
+            {
+                return Config.getCPU().contextSwitch(null);
+            }
+           
+        }
+        
+        if(readyQueue.peek() instanceof IOInstruction && readyQueue.size() == 1)
+        {
+            return Config.getCPU().contextSwitch(null);
+        }
+        else
+        {
+            if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
+        {
+           Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
+        }
+        }
+        
+        //causing null pointer??
+        
+            
+        return Config.getCPU().contextSwitch(readyQueue.poll());
+        
+      
     }
 
     public int syscall(int number, Object... varargs)
