@@ -1,5 +1,6 @@
 package simulator;
 
+import com.sun.org.apache.bcel.internal.generic.CPInstruction;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import static simulator.InterruptHandler.TIME_OUT;
@@ -63,6 +64,7 @@ public class RRKernel implements Kernel
         }
         */
         
+        /*
         if(!(Config.getCPU().isIdle()))
         {
            
@@ -72,31 +74,70 @@ public class RRKernel implements Kernel
             {
                 readyQueue.add(pcb);
             }
-            
-            if(readyQueue.peek() instanceof IOInstruction && readyQueue.size() == 1)
-            {
-                return Config.getCPU().contextSwitch(null);
-            }
            
         }
         
-        if(readyQueue.peek() instanceof IOInstruction && readyQueue.size() == 1)
+        if(readyQueue.peek() instanceof IOInstruction )
+        {
+            readyQueue.add(readyQueue.pop()); //add front element to back
+            
+            //return Config.getCPU().contextSwitch(null);
+        }
+        
+        if(readyQueue.peek() == null)
         {
             return Config.getCPU().contextSwitch(null);
         }
-        else
-        {
-            if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
+            
+        
+        Config.getCPU().contextSwitch(readyQueue.poll());
+        
+        if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
         {
            Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
         }
+        
+        
+        return Config.getCPU().getCurrentProcess(); 
+        */
+        
+        //loop through and put cpu inst at front if Io adde to back
+        //case queue relevant if readyqueue peek is cpu instruction not empty
+        
+        for (int i = 0; i < readyQueue.size(); i++) 
+        {  
+            if(readyQueue.peek().getInstruction() instanceof IOInstruction)
+            {
+                readyQueue.add(readyQueue.pop());
+            }
+            else
+            {
+               break;    
+            }
+            
         }
         
-        //causing null pointer??
+        if(!readyQueue.isEmpty() && readyQueue.peek().getInstruction() instanceof CPUInstruction)
+        {
+          Config.getCPU().contextSwitch(readyQueue.pop()); 
+          
+          if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
+          {
+            Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
+          }
+          
+          return Config.getCPU().getCurrentProcess();
+        }
         
-            
-        return Config.getCPU().contextSwitch(readyQueue.poll());
         
+        
+        if(readyQueue.isEmpty() || readyQueue.peek().getInstruction() instanceof IOInstruction)
+        {
+            return Config.getCPU().contextSwitch(null);
+        }
+        
+        //???
+        return Config.getCPU().getCurrentProcess(); 
       
     }
 
