@@ -104,6 +104,11 @@ public class RRKernel implements Kernel
         //loop through and put cpu inst at front if Io adde to back
         //case queue relevant if readyqueue peek is cpu instruction not empty
         
+        if(Config.getCPU().getCurrentProcess()!=null && Config.getCPU().getCurrentProcess().getState()!=ProcessControlBlock.State.TERMINATED)
+        {
+            readyQueue.add(Config.getCPU().getCurrentProcess());
+        }
+        
         for (int i = 0; i < readyQueue.size(); i++) 
         {  
             if(readyQueue.peek().getInstruction() instanceof IOInstruction)
@@ -136,7 +141,7 @@ public class RRKernel implements Kernel
             return Config.getCPU().contextSwitch(null);
         }
         
-        //???
+        
         return Config.getCPU().getCurrentProcess(); 
       
     }
