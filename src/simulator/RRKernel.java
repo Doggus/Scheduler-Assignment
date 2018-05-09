@@ -28,86 +28,15 @@ public class RRKernel implements Kernel
     }
 
     private ProcessControlBlock dispatch()
-    {
-       /*
-        if(readyQueue.peek() != null && readyQueue.size() != 1 && !(readyQueue.peek().getInstruction() instanceof IOInstruction))
+    {   
+        if(!Config.getCPU().isIdle())
         {
-            if (readyQueue.peek().getInstruction() instanceof IOInstruction)
+          if(Config.getCPU().getCurrentProcess()!=null && Config.getCPU().getCurrentProcess().getState()!= ProcessControlBlock.State.TERMINATED)
             {
-                readyQueue.add(readyQueue.pop());
-                ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
-
-               return pcb;
-            } 
-            else
-            {
-
-                ProcessControlBlock pcb = Config.getCPU().contextSwitch(readyQueue.pop());
-                Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.RUNNING);
-
-                if (pcb != null && pcb.hasNextInstruction())
-                {
-                    readyQueue.add(pcb);
-                }
-
-                if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime || Config.getCPU().getCurrentProcess().hasNextInstruction())
-                {
-                    Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
-                }
-
-                return pcb;
-            }
-        }
-        else
-        {
-            Config.getCPU().contextSwitch(null);
-        }
-        */
-        
-        /*
-        if(!(Config.getCPU().isIdle()))
-        {
-           
-            ProcessControlBlock pcb = Config.getCPU().getCurrentProcess();
-            
-            if(pcb.hasNextInstruction() || ((CPUInstruction)pcb.getInstruction()).getBurstRemaining() > 0)
-            {
-                readyQueue.add(pcb);
-            }
-           
+                readyQueue.add(Config.getCPU().getCurrentProcess());
+            }  
         }
         
-        if(readyQueue.peek() instanceof IOInstruction )
-        {
-            readyQueue.add(readyQueue.pop()); //add front element to back
-            
-            //return Config.getCPU().contextSwitch(null);
-        }
-        
-        if(readyQueue.peek() == null)
-        {
-            return Config.getCPU().contextSwitch(null);
-        }
-            
-        
-        Config.getCPU().contextSwitch(readyQueue.poll());
-        
-        if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
-        {
-           Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
-        }
-        
-        
-        return Config.getCPU().getCurrentProcess(); 
-        */
-        
-        //loop through and put cpu inst at front if Io adde to back
-        //case queue relevant if readyqueue peek is cpu instruction not empty
-        
-        if(Config.getCPU().getCurrentProcess()!=null && Config.getCPU().getCurrentProcess().getState()!=ProcessControlBlock.State.TERMINATED)
-        {
-            readyQueue.add(Config.getCPU().getCurrentProcess());
-        }
         
         for (int i = 0; i < readyQueue.size(); i++) 
         {  
@@ -124,23 +53,25 @@ public class RRKernel implements Kernel
         
         if(!readyQueue.isEmpty() && readyQueue.peek().getInstruction() instanceof CPUInstruction)
         {
+          
           Config.getCPU().contextSwitch(readyQueue.pop()); 
+          Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.RUNNING);
+          
+          
           
           if(((CPUInstruction)Config.getCPU().getCurrentProcess().getInstruction()).getBurstRemaining() > sliceTime)
           {
-            Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
+              Config.getSimulationClock().scheduleInterrupt(sliceTime, this, Config.getCPU().getCurrentProcess().getPID());
           }
+         
           
           return Config.getCPU().getCurrentProcess();
         }
-        
-        
-        
+           
         if(readyQueue.isEmpty() || readyQueue.peek().getInstruction() instanceof IOInstruction)
         {
             return Config.getCPU().contextSwitch(null);
         }
-        
         
         return Config.getCPU().getCurrentProcess(); 
       
@@ -155,16 +86,17 @@ public class RRKernel implements Kernel
             {
                 IODevice device = new IODevice((Integer) varargs[0], (String) varargs[1]);
                 Config.addDevice(device);
+                
             }
             break;
             case EXECVE:
             {
+                
                 ProcessControlBlock pcb = this.loadProgram((String) varargs[0]);
                 if (pcb != null)
                 {
-                  
+                    
                     readyQueue.add(pcb);
-
                     if (Config.getCPU().isIdle())
                     {
                         dispatch();
@@ -190,6 +122,7 @@ public class RRKernel implements Kernel
                 dispatch();
             }
             break;
+            
             default:
                 result = -1;
         }
@@ -198,13 +131,30 @@ public class RRKernel implements Kernel
 
     public void interrupt(int interruptType, Object... varargs)
     {
+        
         switch (interruptType)
         {
             case TIME_OUT:
+                
+                int count = 0;
+                //check if readyQueu is filled with only IOInstructions
+                for (ProcessControlBlock pcb : readyQueue) 
+                {
+                    if(pcb.getInstruction() instanceof IOInstruction)
+                    {
+                        count++;
+                    }
+                }
+                
+                if(!readyQueue.isEmpty() && count!=readyQueue.size())
+                {
+                    Config.getCPU().getCurrentProcess().setState(ProcessControlBlock.State.READY);
+                }
+                
                 dispatch();
                 
             case WAKE_UP:
-
+           
                 if(varargs.length == 2)
                 {
                     ProcessControlBlock pcb = (ProcessControlBlock)varargs[1];
@@ -217,6 +167,7 @@ public class RRKernel implements Kernel
                 }
 
                 break;
+                
             default:
                 throw new IllegalArgumentException("FCFSKernel:interrupt(" + interruptType + "...): unknown type.");
         }

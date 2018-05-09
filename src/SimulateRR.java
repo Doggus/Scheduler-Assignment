@@ -35,6 +35,13 @@ public class SimulateRR
         System.out.println(timer);
         System.out.println("Context switches: " + Config.getCPU().getContextSwitches());
         System.out.printf("CPU utilization: %.2f\n",((double)timer.getUserTime())/timer.getSystemTime() * 100);
+        
+        /*
+        Enter slice time: ?
+        Enter cost of system call: 3
+        Enter cost of context switch: 2
+        Enter trace level: 5
+        */
    }
     
     
